@@ -1,0 +1,340 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Creation of Lambda, API Gateway, SQS, DynamoDB, and SNS for Order Processing system
+
+Parameters:
+  ApiName:
+    Type: String
+    Default: ordersubmission-cf-api
+    Description: Name of API Gateway
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+    - dev
+    - stg
+    - prod
+    Description: Deployment environment
+
+Resources:
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Description: API gateway to trigger Lambda function
+      Name: !Ref ApiName
+      EndpointConfiguration:
+        Types:
+        - REGIONAL
+
+  ApiGatewayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: ordersubmission
+      RestApiId: !Ref ApiGateway
+
+  ApiGatewayMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      ResourceId: !Ref ApiGatewayResource
+      RestApiId: !Ref ApiGateway
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS
+        #Uri: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:OrderSubmissionLambda-CF"
+        Uri: !Sub
+          - "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OrderSubmissionLambda.Arn}/invocations"
+          - {}
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+            method.response.header.Access-Control-Allow-Methods: "'OPTIONS,POST'"
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+      MethodResponses:
+      - StatusCode: 200
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: true
+          method.response.header.Access-Control-Allow-Methods: true
+          method.response.header.Access-Control-Allow-Headers: true
+        ResponseModels:
+          application/json: 'Empty'
+
+  ApiGatewayOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      ResourceId: !Ref ApiGatewayResource
+      RestApiId: !Ref ApiGateway
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+            method.response.header.Access-Control-Allow-Methods: "'OPTIONS,POST'"
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+      MethodResponses:
+      - StatusCode: 200
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: true
+          method.response.header.Access-Control-Allow-Methods: true
+          method.response.header.Access-Control-Allow-Headers: true
+
+  ApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      Description: Deploying Api
+      RestApiId: !Ref ApiGateway
+      StageName: !Ref Environment
+    DependsOn: ApiGatewayMethod
+
+  OrderSubmissionLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: OrderSubmissionLambda-CF
+      Runtime: python3.13
+      Handler: index.lambda_handler
+      Role: !GetAtt OrderSubmissionLambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import boto3
+          import os
+          import json
+
+          # Initializing the SQS client using boto3
+          sqs = boto3.client("sqs")
+
+          # Retrieve the SQS queue URL from environment variables
+          QUEUE_URL = os.getenv("SQS_QUEUE_URL")
+
+          def lambda_handler(event, context):
+              print('event')
+              print(event)
+
+              message_body = json.loads(event["body"])
+              
+              # Sending the parsed message to an SQS queue
+              response = sqs.send_message(
+                  QueueUrl=QUEUE_URL,
+                  MessageBody=json.dumps(message_body)
+                  )
+
+              return {
+                  'statusCode': 200,
+                  'headers': {
+                    'Access-Control-Allow-Origin': '*',  # Allow CORS from any domain
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS',  # Allow POST and OPTIONS methods
+                    'Access-Control-Allow-Headers': 'Content-Type, X-Amz-Date, Authorization, X-Api-Key',  # Allow certain headers
+                },
+                  'body': json.dumps(response)  # Ensure body is a JSON string
+              }
+
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref OrderSubmissionSQSQueue
+
+  OrderSubmissionLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Description: IAM Role for order submission lambda
+      Policies:
+      - PolicyName: OrderSubmissionLambdaPolicy-CF
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+            - sqs:SendMessage
+            Resource: !GetAtt OrderSubmissionSQSQueue.Arn
+      RoleName: OrderSubmissionLambdaRole-CF
+
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref OrderSubmissionLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/POST/ordersubmission"
+
+  OrderSubmissionSQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: OrderSubmissionSQS-CF
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt OrderSubmissionDLQ.Arn
+        maxReceiveCount: 3
+
+  OrderSubmissionDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: OrderSubmissionDLQ-CF
+
+  SQSTrigger:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 10
+      EventSourceArn: !GetAtt OrderSubmissionSQSQueue.Arn
+      FunctionName: !Ref OrderProcessingLambda
+      Enabled: 'True'
+
+  OrderProcessingLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: OrderProcessingLambda-CF
+      Runtime: python3.13
+      Handler: index.lambda_handler
+      Role: !GetAtt OrderProcessingLambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+
+          # Creating a DynamoDB instance 
+          dynamodb = boto3.resource('dynamodb')
+          table_name = os.getenv("TABLE_NAME")
+          table = dynamodb.Table(table_name)
+
+
+          def lambda_handler(event, context):
+              print('event')
+              print(event)
+              # Parsing the incoming event from sqs
+              order_data = json.loads(event["Records"][0]["body"])
+            
+              # Extracting specific details from the 'order_data' dictionary
+              customer_id = int(order_data['customer_id'])
+              product_id = order_data['product_id']
+              quantity = order_data['quantity']
+              order_date = order_data['order_date']
+              
+              # Inserting the extracted order data into the DynamoDB table
+              response = table.put_item(
+                  Item = {
+                      'customer_id': customer_id,
+                      'product_id': product_id,
+                      'quantity': quantity,
+                      'order_date': order_date
+                  }
+                  )
+
+              return 
+              {'statusCode': 200,
+              'body': json.dumps('Order successfully saved to DynamoDB'),
+              'response': response   
+              }
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref OrderTable
+
+  OrderProcessingLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Description: IAM Role for order processing lambda
+      Policies:
+      - PolicyName: OrderProcessingLambdaPolicy-CF
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+            Resource: !GetAtt OrderSubmissionSQSQueue.Arn
+          - Effect: Allow
+            Action:
+            - dynamodb:PutItem
+            - dynamodb:BatchWriteItem
+            Resource: !GetAtt OrderTable.Arn
+
+      RoleName: OrderProcessingLambdaRole-CF
+
+  OrderTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: OrderProcessingTable-CF
+      AttributeDefinitions:
+      - AttributeName: customer_id
+        AttributeType: N
+      # - AttributeName: product_id
+      #   AttributeType: S
+      # - AttributeName: quantity
+      #   AttributeType: S
+      # - AttributeName: order_date
+      #   AttributeType: S
+      KeySchema:
+      - AttributeName: customer_id
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  SNSNotification:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: email-dlq-notification-cf
+
+  SNSEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: courtney@gmail.com
+      Protocol: email
+      TopicArn: !Ref SNSNotification
+
+  CloudWatchAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alarm when messages in DLQ
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Statistic: Average
+      Period: 120
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+      - Name: QueueName
+        Value: !GetAtt OrderSubmissionDLQ.QueueName
+      AlarmActions:
+      - !Ref SNSNotification
+
+Outputs:
+  ApiGatewayEndpoint:
+    Description: URL of the API Gateway Endpoint
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/ordersubmission"
+
+  LambdaFunctionArn:
+    Description: "Lambda function ARN"
+    Value: !GetAtt OrderSubmissionLambda.Arn
