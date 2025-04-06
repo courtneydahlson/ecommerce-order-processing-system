@@ -42,7 +42,6 @@ Resources:
       Integration:
         IntegrationHttpMethod: POST
         Type: AWS
-        #Uri: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:OrderSubmissionLambda-CF"
         Uri: !Sub
           - "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OrderSubmissionLambda.Arn}/invocations"
           - {}
