@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Place Your Order</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Order Your Product</h1>
+        <p>Please enter the details below to place your order.</p>
+    </header>
+
+    <section class="order-form">
+        <form id="orderForm">
+            <label for="customerId">Customer ID:</label>
+            <input type="text" id="customerId" name="customerId" required>
+
+            <label for="productId">Product:</label>
+            <select id="productId" name="productId" required>
+                <option value="">-- Select a product --</option>
+                <option value="apple">Apple</option>
+                <option value="banana">Banana</option>
+                <option value="orange">Orange</option>
+                <option value="grapes">Grapes</option>
+            </select>
+            <div id="productImageContainer">
+                <img id="productImage" src="" alt="" style="display:none;" />
+            </div>
+
+            <label for="quantity">Quantity:</label>
+            <input type="number" id="quantity" name="quantity" min="1" required>
+
+            <label for="orderDate">Order Date:</label>
+            <input type="date" id="orderDate" name="orderDate" required>
+
+            <button type="submit">Place Order</button>
+        </form>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 Online Store</p>
+    </footer>
+
+    <script>
+        console.log("✅ Inline script is running!");
+    </script>    
+
+    <script src="main.js"></script>
+</body>
+</html>

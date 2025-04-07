@@ -1,0 +1,92 @@
+/* Global Styling for the entire page */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+/* Styling for the header section */
+header {
+    text-align: center;
+    background-color: #007BFF;
+    color: white;
+    padding: 20px;
+}
+
+/* Styling for the footer section */
+footer {
+    text-align: center;
+    background-color: #222;
+    color: white;
+    padding: 10px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+/* Styling for all buttons */
+button {
+    background-color: #007BFF;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 32px;
+}
+
+/* Hover effect for buttons */
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Styling for the order form container */
+.order-form {
+    max-width: 500px;
+    margin: 50px auto;
+    background-color: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Styling for all input fields inside the form */
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Styling for the submit button inside the form */
+button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #28a745;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* Hover effect for the submit button */
+button:hover {
+    background-color: #218838;
+}
+
+/* Styling for the product image container */
+#productImageContainer {
+    text-align: center;
+    margin-top: 15px;
+}
+
+/* Styling for the product image */
+#productImage {
+    width: 150px;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
