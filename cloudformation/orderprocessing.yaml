@@ -14,6 +14,10 @@ Parameters:
     - stg
     - prod
     Description: Deployment environment
+  Email:
+    Type: String
+    Default: courtney@gmail.com
+    Description: SNS email address
 
 Resources:
   ApiGateway:
@@ -206,6 +210,7 @@ Resources:
           import json
           import boto3
           import os
+          import uuid
 
           # Creating a DynamoDB instance 
           dynamodb = boto3.resource('dynamodb')
@@ -224,11 +229,13 @@ Resources:
               product_id = order_data['product_id']
               quantity = order_data['quantity']
               order_date = order_data['order_date']
+              order_id = str(uuid.uuid4())
               
               # Inserting the extracted order data into the DynamoDB table
               response = table.put_item(
                   Item = {
                       'customer_id': customer_id,
+                      'order_id': order_id,
                       'product_id': product_id,
                       'quantity': quantity,
                       'order_date': order_date
@@ -283,12 +290,12 @@ Resources:
   OrderTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: OrderProcessingTable-CF
+      TableName: OrderProcessingTableUpdated-CF
       AttributeDefinitions:
       - AttributeName: customer_id
         AttributeType: N
-      # - AttributeName: product_id
-      #   AttributeType: S
+      - AttributeName: order_id
+        AttributeType: S
       # - AttributeName: quantity
       #   AttributeType: S
       # - AttributeName: order_date
@@ -296,6 +303,8 @@ Resources:
       KeySchema:
       - AttributeName: customer_id
         KeyType: HASH
+      - AttributeName: order_id
+        KeyType: RANGE
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
@@ -308,7 +317,7 @@ Resources:
   SNSEmailSubscription:
     Type: AWS::SNS::Subscription
     Properties:
-      Endpoint: courtney@gmail.com
+      Endpoint: !Ref Email
       Protocol: email
       TopicArn: !Ref SNSNotification
 
