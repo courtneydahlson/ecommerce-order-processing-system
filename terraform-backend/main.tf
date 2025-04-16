@@ -93,6 +93,12 @@ resource "aws_api_gateway_deployment" "deployment" {
   lifecycle {
     create_before_destroy = true
   }
+
+  depends_on = [
+    aws_api_gateway_method.post_ordersubmission,
+    aws_api_gateway_integration.lambda_integration,
+    aws_api_gateway_resource.ordersubmission
+  ]
 }
 
 # Stage
@@ -287,5 +293,5 @@ resource "aws_sns_topic" "sns_dlq_notification" {
 resource "aws_sns_topic_subscription" "sns_email_notification" {
   topic_arn = aws_sns_topic.sns_dlq_notification.arn
   protocol  = "email"
-  endpoint  = "courtneydahlson@gmail.com" 
+  endpoint  = var.notification_email 
 }
