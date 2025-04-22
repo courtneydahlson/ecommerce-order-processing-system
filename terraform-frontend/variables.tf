@@ -30,3 +30,21 @@ variable "my_public_ip" {
   type        = string
   default     = "0.0.0.0/0"
 }
+
+variable "asg_max_size" {
+    description = "Auto-scaling group maximum amount of instances"
+    type = number
+    default = 3
+}
+
+variable "asg_min_size" {
+    description = "Auto-scaling group minimum amount of instances"
+    type = number
+    default = 1
+}
+
+variable "asg_desired_capacity" {
+  description = "Desired number of instances in the Auto Scaling Group"
+  type        = number
+  default     = 2
+}
