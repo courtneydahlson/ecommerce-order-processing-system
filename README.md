@@ -32,6 +32,16 @@ The system uses the following AWS services:
 ## Frontend Development
 This project also includes a simple web-based frontend that allows users to place orders through a form. The frontend interacts with the backend API via HTTP requests.
 
+### Architecture Explained
+
+![Frontend Architecture](./architecture/orderprocessingsystem-frontend.jpeg)
+
+The frontend uses the following AWS services:
+- **Application Load Balancer** -  Distributes incoming traffic to healthy EC2 instances.
+- **Auto Scaling Group** - Automatically adjusts the number of EC2 instances based on demand or health checks.
+- **EC2 Instances** - Serve the static frontend files (HTML, CSS, JavaScript, and images) using an Apache web server
+
+
 ### Files 
 The following files/folders are in the frontend folder:
 
