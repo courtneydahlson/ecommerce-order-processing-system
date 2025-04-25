@@ -8,3 +8,5 @@ jobs:
       run: echo "Hello World!"
     - name: Print working directory
       run: pwd
+    - name: Show files
+      run: ls -la
