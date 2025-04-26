@@ -17,9 +17,6 @@ jobs:
       run: |
         ls -la
         pwd
-    - name: List files in Terraform backend
-      run: ls -la
-      working-directory: ./terraform-backend
     - name: Installing Terraform
       uses: hashicorp/setup-terraform@v3
       with:
@@ -32,9 +29,15 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
+    - name: List files in Terraform backend
+      run: ls -la
+      working-directory: ./terraform-backend
     - name: Terraform Init
       run: terraform init
+      working-directory: ./terraform-backend
     - name: Terraform Validate
       run: terraform validate
+      working-directory: ./terraform-backend
     - name: Terraform Plan
       run: terraform plan
+      working-directory: ./terraform-backend
