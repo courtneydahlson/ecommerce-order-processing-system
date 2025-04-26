@@ -18,5 +18,9 @@ jobs:
         ls -la
         pwd
         cat README.md
+    - name: Installing Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.11.3"
     - name: Check Terraform Version
       run: terraform --version
