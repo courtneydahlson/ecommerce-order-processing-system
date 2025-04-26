@@ -9,6 +9,10 @@ jobs:
     steps:
     - name: Print greeting
       run: echo "Hello World!"
+    - name: Create files
+      run: touch test.py
+    - name: Create directory
+      run: mkdir testdir
     - name: List files
       run: |
         ls -la
