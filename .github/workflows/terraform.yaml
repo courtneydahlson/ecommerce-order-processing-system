@@ -19,6 +19,10 @@ jobs:
         pwd
     - name: Change directory to Terraform backend
       run: cd terraform-backend
+    - name: List files
+      run: |
+        ls -la
+        pwd
     - name: Installing Terraform
       uses: hashicorp/setup-terraform@v3
       with:
