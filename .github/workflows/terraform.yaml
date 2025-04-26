@@ -17,3 +17,4 @@ jobs:
       run: |
         ls -la
         pwd
+        cat README.md
