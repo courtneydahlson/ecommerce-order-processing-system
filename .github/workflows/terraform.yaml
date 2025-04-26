@@ -1,0 +1,11 @@
+name: Terraform Deployment
+on:
+  push:
+    branches:
+    - dev
+jobs:
+  terraform-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Print greeting
+      run: echo "Hello World!"
