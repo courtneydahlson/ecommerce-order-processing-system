@@ -18,7 +18,9 @@ jobs:
         ls -la
         pwd
     - name: Change directory to Terraform backend
-      run: cd terraform-backend
+      run: |
+        cd terraform-backend
+        ls -la
     - name: List files
       run: |
         ls -la
