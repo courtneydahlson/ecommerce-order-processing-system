@@ -9,3 +9,7 @@ jobs:
     steps:
     - name: Print greeting
       run: echo "Hello World!"
+    - name: List files
+      run: |
+        ls -la
+        pwd
