@@ -9,12 +9,14 @@ jobs:
     steps:
     - name: Print greeting
       run: echo "Hello World!"
-    - name: Create files
-      run: touch test.py
     - name: Clone Github repository
       uses: actions/checkout@v4
+      with:
+        ref: dev
     - name: List files
       run: |
         ls -la
         pwd
         cat README.md
+    - name: Check Terraform Version
+      run: terraform --version
