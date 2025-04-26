@@ -11,8 +11,8 @@ jobs:
       run: echo "Hello World!"
     - name: Create files
       run: touch test.py
-    - name: Create directory
-      run: mkdir testdir
+    - name: Clone Github repository
+      uses: actions/checkout@v4
     - name: List files
       run: |
         ls -la
