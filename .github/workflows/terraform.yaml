@@ -17,14 +17,9 @@ jobs:
       run: |
         ls -la
         pwd
-    - name: Change directory to Terraform backend
-      run: |
-        cd terraform-backend
-        ls -la
-    - name: List files
-      run: |
-        ls -la
-        pwd
+    - name: List files in Terraform backend
+      run: ls -la
+      working-directory: ./terraform-backend
     - name: Installing Terraform
       uses: hashicorp/setup-terraform@v3
       with:
