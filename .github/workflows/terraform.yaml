@@ -57,3 +57,26 @@ jobs:
     steps:
     - name: Show API Gateway URL
       run: echo "API Gateway URL is ${{ needs.terraform-backend-deploy.outputs.output1 }}"
+    - name: Clone Github repository
+      uses: actions/checkout@v4
+      with:
+        ref: dev
+    - name: List files
+      run: |
+        ls -la
+        pwd
+    - name: Installing Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.11.3"
+    - name: Check Terraform Version
+      run: terraform --version
+    - name: Setup AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    - name: List files in Frontend dir
+      run: ls -la
+      working-directory: ./frontend
