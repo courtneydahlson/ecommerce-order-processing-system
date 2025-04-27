@@ -80,3 +80,6 @@ jobs:
     - name: List files in Frontend dir
       run: ls -la
       working-directory: ./frontend
+    - name: Look at congig.js files
+      run: cat config.js
+      working-directory: ./frontend
