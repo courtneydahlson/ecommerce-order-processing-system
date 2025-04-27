@@ -80,6 +80,15 @@ jobs:
     - name: List files in Frontend dir
       run: ls -la
       working-directory: ./frontend
-    - name: Look at congig.js files
+    - name: Look at config.js file
+      run: cat config.js
+      working-directory: ./frontend
+    - name: Write URL to config.js
+      run: |
+        echo "const CONFIG = {" > config.js
+        echo "  API_GATEWAY_URL: '${{ needs.terraform-backend-deploy.outputs.output1 }}'" >> config.js
+        echo "};" >> config.js
+      working-directory: ./frontend
+    - name: Look at config.js file
       run: cat config.js
       working-directory: ./frontend
