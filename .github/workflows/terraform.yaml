@@ -44,3 +44,6 @@ jobs:
     - name: Terraform Apply
       run: terraform apply --auto-approve
       working-directory: ./terraform-backend
+    - name: Get Terraform Output
+      run: terraform output api_gateway_url
+      working-directory: ./terraform-backend
