@@ -55,5 +55,5 @@ jobs:
     needs: terraform-backend-deploy
     runs-on: ubuntu-latest
     steps:
-    - name: Get files
-      run: ls -la
+    - name: Show API Gateway URL
+      run: echo "API Gateway URL is ${{ needs.terraform-backend-deploy.outputs.output1 }}"
