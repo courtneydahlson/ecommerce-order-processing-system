@@ -51,3 +51,8 @@ jobs:
       run: |
         echo "api_gateway_url=$(terraform output -raw api_gateway_url)" >> "$GITHUB_OUTPUT"
       working-directory: ./terraform-backend
+  terraform-frontend-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get files
+      run: ls -la
