@@ -7,7 +7,7 @@ jobs:
   terraform-deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Print greeting
+    - name: Print greeting hello
       run: echo "Hello World!"
     - name: Clone Github repository
       uses: actions/checkout@v4
