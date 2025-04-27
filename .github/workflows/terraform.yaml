@@ -4,8 +4,10 @@ on:
     branches:
     - dev
 jobs:
-  terraform-deploy:
+  terraform-backend-deploy:
     runs-on: ubuntu-latest
+    outputs:
+      output1: ${{ steps.tf_output.outputs.api_gateway_url }}
     steps:
     - name: Print greeting hello
       run: echo "Hello World!"
@@ -45,5 +47,7 @@ jobs:
       run: terraform apply --auto-approve
       working-directory: ./terraform-backend
     - name: Get Terraform Output
-      run: terraform output api_gateway_url
+      id: tf_output
+      run: |
+        echo "api_gateway_url=$(terraform output -raw api_gateway_url)" >> "$GITHUB_OUTPUT"
       working-directory: ./terraform-backend
