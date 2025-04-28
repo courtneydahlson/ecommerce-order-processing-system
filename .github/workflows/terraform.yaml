@@ -100,3 +100,15 @@ jobs:
       run: |
         aws s3 cp config.js s3://$S3_BUCKET/frontend/
       working-directory: ./frontend
+    - name: Terraform Init
+      run: terraform init
+      working-directory: ./terraform-frontend
+    - name: Terraform Validate
+      run: terraform validate
+      working-directory: ./terraform-frontend
+    - name: Terraform Plan
+      run: terraform plan
+      working-directory: ./terraform-frontend
+    - name: Terraform Apply
+      run: terraform apply --auto-approve
+      working-directory: ./terraform-frontend
