@@ -51,9 +51,14 @@ jobs:
       run: |
         echo "api_gateway_url=$(terraform output -raw api_gateway_url)" >> "$GITHUB_OUTPUT"
       working-directory: ./terraform-backend
+
   terraform-frontend-deploy:
     needs: terraform-backend-deploy
     runs-on: ubuntu-latest
+
+    env:
+      S3_BUCKET: order-processing-system-config
+
     steps:
     - name: Show API Gateway URL
       run: echo "API Gateway URL is ${{ needs.terraform-backend-deploy.outputs.output1 }}"
@@ -93,7 +98,5 @@ jobs:
       run: aws s3 ls
     - name: Copy config.js to S3 Bucket
       run: |
-        aws s3 cp config.js s3://order-processing-system-config
+        aws s3 cp config.js s3://$S3_BUCKET/frontend/
       working-directory: ./frontend
-    - name: List S3 Bucket
-      run: aws s3 ls
