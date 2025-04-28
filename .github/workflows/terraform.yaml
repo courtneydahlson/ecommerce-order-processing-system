@@ -93,5 +93,7 @@ jobs:
       run: aws s3 ls
     - name: Copy config.js to S3 Bucket
       run: |
-        aws s3 cp ./frontend/config.js s3://order-processing-system-config
+        aws s3 cp config.js s3://order-processing-system-config
       working-directory: ./frontend
+    - name: List S3 Bucket
+      run: aws s3 ls
