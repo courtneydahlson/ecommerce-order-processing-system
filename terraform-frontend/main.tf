@@ -129,10 +129,10 @@ resource "aws_launch_template" "web_server_lt" {
               systemctl start httpd
               systemctl enable httpd
               cd /var/www/html
-              #git clone -b dev https://github.com/courtneydahlson/ecommerce-order-processing-system.git
-              #cp -r ecommerce-order-processing-system/frontend/* .
-              #rm -rf ecommerce-order-processing-system
-              #aws s3 cp s3://order-processing-system-config/frontend 
+              git clone -b dev https://github.com/courtneydahlson/ecommerce-order-processing-system.git
+              cp -r ecommerce-order-processing-system/frontend/* .
+              rm -rf ecommerce-order-processing-system
+              aws s3 cp s3://order-processing-system-config/frontend/config.js . 
               EOF
   )
 

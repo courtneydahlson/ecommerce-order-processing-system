@@ -22,6 +22,32 @@ resource "aws_api_gateway_method" "post_ordersubmission" {
   authorization = "NONE"
 }
 
+
+resource "aws_api_gateway_method_response" "get_response" {
+  rest_api_id = aws_api_gateway_rest_api.apigateway.id
+  resource_id = aws_api_gateway_resource.ordersubmission.id
+  http_method = aws_api_gateway_method.post_ordersubmission.http_method
+  status_code = "200"
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+  response_parameters = {
+  "method.response.header.Access-Control-Allow-Origin" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "get_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.apigateway.id
+  resource_id = aws_api_gateway_resource.ordersubmission.id
+  http_method = aws_api_gateway_method.post_ordersubmission.http_method
+  status_code = aws_api_gateway_method_response.get_response.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+  }
+}
+
 # IAM Role for Order Submission Lambda
 resource "aws_iam_role" "lambda_exec" {
   name = "order_submission_lambda_tf_role"
@@ -69,7 +95,8 @@ resource "aws_api_gateway_integration" "lambda_integration" {
   http_method = aws_api_gateway_method.post_ordersubmission.http_method
 
   integration_http_method = "POST"
-  type                    = "AWS_PROXY"
+  #type                    = "AWS_PROXY"
+  type                    = "MOCK"
   uri                     = aws_lambda_function.order_submission.invoke_arn
 }
 
