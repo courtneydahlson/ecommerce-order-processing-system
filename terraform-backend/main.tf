@@ -95,8 +95,8 @@ resource "aws_api_gateway_integration" "lambda_integration" {
   http_method = aws_api_gateway_method.post_ordersubmission.http_method
 
   integration_http_method = "POST"
-  #type                    = "AWS_PROXY"
-  type                    = "MOCK"
+  type                    = "AWS_PROXY"
+  #type                    = "MOCK"
   uri                     = aws_lambda_function.order_submission.invoke_arn
 }
 
