@@ -177,7 +177,11 @@ resource "aws_api_gateway_deployment" "deployment" {
       aws_api_gateway_rest_api.apigateway.id,
       aws_api_gateway_method.post_ordersubmission.id,
       aws_api_gateway_integration.lambda_integration.id,
-      aws_api_gateway_resource.ordersubmission.id
+      aws_api_gateway_resource.ordersubmission.id,
+      aws_api_gateway_method.options_method.id,
+      aws_api_gateway_integration.options_integration.id,
+      aws_api_gateway_method_response.options_method_response.id,
+      aws_api_gateway_integration_response.options_integration_response.id
     ]))
   }
 
