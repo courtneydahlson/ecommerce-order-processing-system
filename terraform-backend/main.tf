@@ -23,30 +23,30 @@ resource "aws_api_gateway_method" "post_ordersubmission" {
 }
 
 
-resource "aws_api_gateway_method_response" "get_response" {
-  rest_api_id = aws_api_gateway_rest_api.apigateway.id
-  resource_id = aws_api_gateway_resource.ordersubmission.id
-  http_method = aws_api_gateway_method.post_ordersubmission.http_method
-  status_code = "200"
+# resource "aws_api_gateway_method_response" "get_response" {
+#   rest_api_id = aws_api_gateway_rest_api.apigateway.id
+#   resource_id = aws_api_gateway_resource.ordersubmission.id
+#   http_method = aws_api_gateway_method.post_ordersubmission.http_method
+#   status_code = "200"
 
-  response_models = {
-    "application/json" = "Empty"
-  }
-  response_parameters = {
-  "method.response.header.Access-Control-Allow-Origin" = true
-  }
-}
+#   response_models = {
+#     "application/json" = "Empty"
+#   }
+#   response_parameters = {
+#   "method.response.header.Access-Control-Allow-Origin" = true
+#   }
+# }
 
-resource "aws_api_gateway_integration_response" "get_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.apigateway.id
-  resource_id = aws_api_gateway_resource.ordersubmission.id
-  http_method = aws_api_gateway_method.post_ordersubmission.http_method
-  status_code = aws_api_gateway_method_response.get_response.status_code
+# resource "aws_api_gateway_integration_response" "get_integration_response" {
+#   rest_api_id = aws_api_gateway_rest_api.apigateway.id
+#   resource_id = aws_api_gateway_resource.ordersubmission.id
+#   http_method = aws_api_gateway_method.post_ordersubmission.http_method
+#   status_code = aws_api_gateway_method_response.get_response.status_code
 
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
-  }
-}
+#   response_parameters = {
+#     "method.response.header.Access-Control-Allow-Origin" = "'*'"
+#   }
+# }
 
 # IAM Role for Order Submission Lambda
 resource "aws_iam_role" "lambda_exec" {
@@ -96,7 +96,6 @@ resource "aws_api_gateway_integration" "lambda_integration" {
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  #type                    = "MOCK"
   uri                     = aws_lambda_function.order_submission.invoke_arn
 }
 
@@ -114,7 +113,12 @@ resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.apigateway.id
 
   triggers = {
-    redeploy = sha1(jsonencode(aws_api_gateway_rest_api.apigateway))
+    redeploy = sha1(jsonencode([
+      aws_api_gateway_rest_api.apigateway.id,
+      aws_api_gateway_method.post_ordersubmission.id,
+      aws_api_gateway_integration.lambda_integration.id,
+      aws_api_gateway_resource.ordersubmission.id
+    ]))
   }
 
   lifecycle {
