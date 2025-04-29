@@ -113,6 +113,10 @@ resource "aws_launch_template" "web_server_lt" {
   instance_type = var.instance_type
   key_name      = var.key_name
 
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ec2_instance_profile.name
+  }
+
   network_interfaces {
     associate_public_ip_address = true
     security_groups             = [aws_security_group.instance_sg.id]
@@ -127,6 +131,7 @@ resource "aws_launch_template" "web_server_lt" {
               cd /var/www/html
               #git clone -b dev https://github.com/courtneydahlson/ecommerce-order-processing-system.git
               #cp -r ecommerce-order-processing-system/frontend/* .
+              #rm -rf ecommerce-order-processing-system
               #aws s3 cp s3://order-processing-system-config/frontend 
               EOF
   )
@@ -137,6 +142,52 @@ resource "aws_launch_template" "web_server_lt" {
       Name = "WebServer"
     }
   }
+}
+
+resource "aws_iam_role" "ec2_s3_access" {
+  name = "ec2-s3-access-role-tf"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_policy" "s3_access_policy" {
+  name = "ec2-s3-access-policy-tf"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "arn:aws:s3:::${var.s3_bucket_frontend}",
+          "arn:aws:s3:::${var.s3_bucket_frontend}/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_s3_policy" {
+  role       = aws_iam_role.ec2_s3_access.name
+  policy_arn = aws_iam_policy.s3_access_policy.arn
+}
+
+resource "aws_iam_instance_profile" "ec2_instance_profile" {
+  name = "ec2-s3-instance-profile-tf"
+  role = aws_iam_role.ec2_s3_access.name
 }
 
 

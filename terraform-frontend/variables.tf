@@ -48,3 +48,8 @@ variable "asg_desired_capacity" {
   type        = number
   default     = 2
 }
+
+variable "s3_bucket_frontend" {
+    description = "S3 bucket name"
+    type = string
+}

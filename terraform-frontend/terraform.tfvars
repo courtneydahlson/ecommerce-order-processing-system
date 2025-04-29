@@ -10,3 +10,4 @@ my_public_ip = "0.0.0.0/0"
 asg_min_size         = 1
 asg_max_size         = 3
 asg_desired_capacity = 2
+s3_bucket_frontend = "order-processing-system-config"
