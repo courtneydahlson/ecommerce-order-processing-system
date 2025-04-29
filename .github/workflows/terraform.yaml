@@ -51,9 +51,9 @@ jobs:
       run: |
         echo "api_gateway_url=$(terraform output -raw api_gateway_url)" >> "$GITHUB_OUTPUT"
       working-directory: ./terraform-backend
-    - name: Terraform destroy
-      run: terraform destroy --auto-approve
-      working-directory: ./terraform-backend
+    # - name: Terraform destroy
+    #   run: terraform destroy --auto-approve
+    #   working-directory: ./terraform-backend
 
   terraform-frontend-deploy:
     needs: terraform-backend-deploy
@@ -115,6 +115,6 @@ jobs:
     - name: Terraform Apply
       run: terraform apply --auto-approve
       working-directory: ./terraform-frontend
-    - name: Terraform Destroy
-      run: terraform destroy --auto-approve
-      working-directory: ./terraform-frontend
+    # - name: Terraform Destroy
+    #   run: terraform destroy --auto-approve
+    #   working-directory: ./terraform-frontend
