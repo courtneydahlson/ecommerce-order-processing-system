@@ -23,9 +23,9 @@ def lambda_handler(event, context):
     return {
         'statusCode': 200,
         'headers': {
-        'Access-Control-Allow-Origin': '*',  # Allow CORS from any domain
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',  # Allow POST and OPTIONS methods
-        'Access-Control-Allow-Headers': 'Content-Type, X-Amz-Date, Authorization, X-Api-Key',  # Allow certain headers
-    },
+            'Access-Control-Allow-Origin': '*',  # Allow CORS from any domain
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',  # Allow POST and OPTIONS methods
+            'Access-Control-Allow-Headers': 'Content-Type, X-Amz-Date, Authorization, X-Api-Key',  # Allow certain headers
+        },
         'body': json.dumps(response)  # Ensure body is a JSON string
     }

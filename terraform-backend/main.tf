@@ -22,6 +22,92 @@ resource "aws_api_gateway_method" "post_ordersubmission" {
   authorization = "NONE"
 }
 
+
+# resource "aws_api_gateway_method_response" "post_method_response" {
+#   rest_api_id = aws_api_gateway_rest_api.apigateway.id
+#   resource_id = aws_api_gateway_resource.ordersubmission.id
+#   http_method = aws_api_gateway_method.post_ordersubmission.http_method
+#   status_code = "200"
+
+#   response_models = {
+#     "application/json" = "Empty"
+#   }
+#   response_parameters = {
+#     "method.response.header.Access-Control-Allow-Origin" = true
+#     "method.response.header.Access-Control-Allow-Methods" = true
+#     "method.response.header.Access-Control-Allow-Headers" = true
+#   }
+# }
+
+# resource "aws_api_gateway_integration_response" "post_integration_response" {
+#   rest_api_id = aws_api_gateway_rest_api.apigateway.id
+#   resource_id = aws_api_gateway_resource.ordersubmission.id
+#   http_method = aws_api_gateway_method.post_ordersubmission.http_method
+#   status_code = aws_api_gateway_method_response.post_method_response.status_code
+
+#   response_templates = {
+#     "application/json" = ""
+#   }
+
+#   response_parameters = {
+#     "method.response.header.Access-Control-Allow-Origin" = "'*'"
+#     "method.response.header.Access-Control-Allow-Methods" = "'GET, POST, OPTIONS'"
+#     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type'"
+#   }
+# }
+
+resource "aws_api_gateway_method" "options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.apigateway.id
+  resource_id   = aws_api_gateway_resource.ordersubmission.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+# MOCK integration for OPTIONS method
+resource "aws_api_gateway_integration" "options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.apigateway.id
+  resource_id = aws_api_gateway_resource.ordersubmission.id
+  http_method = aws_api_gateway_method.options_method.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+# OPTIONS method response (CORS headers)
+resource "aws_api_gateway_method_response" "options_method_response" {
+  rest_api_id = aws_api_gateway_rest_api.apigateway.id
+  resource_id = aws_api_gateway_resource.ordersubmission.id
+  http_method = aws_api_gateway_method.options_method.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin"  = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Headers" = true
+  }
+}
+
+# Integration response for OPTIONS method (CORS headers)
+resource "aws_api_gateway_integration_response" "options_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.apigateway.id
+  resource_id = aws_api_gateway_resource.ordersubmission.id
+  http_method = aws_api_gateway_method.options_method.http_method
+  status_code = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.options_integration,
+    aws_api_gateway_method_response.options_method_response
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+  }
+}
+
 # IAM Role for Order Submission Lambda
 resource "aws_iam_role" "lambda_exec" {
   name = "order_submission_lambda_tf_role"
@@ -87,7 +173,16 @@ resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.apigateway.id
 
   triggers = {
-    redeploy = sha1(jsonencode(aws_api_gateway_rest_api.apigateway))
+    redeploy = sha1(jsonencode([
+      aws_api_gateway_rest_api.apigateway.id,
+      aws_api_gateway_method.post_ordersubmission.id,
+      aws_api_gateway_integration.lambda_integration.id,
+      aws_api_gateway_resource.ordersubmission.id,
+      aws_api_gateway_method.options_method.id,
+      aws_api_gateway_integration.options_integration.id,
+      aws_api_gateway_method_response.options_method_response.id,
+      aws_api_gateway_integration_response.options_integration_response.id
+    ]))
   }
 
   lifecycle {
@@ -97,7 +192,8 @@ resource "aws_api_gateway_deployment" "deployment" {
   depends_on = [
     aws_api_gateway_method.post_ordersubmission,
     aws_api_gateway_integration.lambda_integration,
-    aws_api_gateway_resource.ordersubmission
+    aws_api_gateway_resource.ordersubmission,
+    aws_api_gateway_integration_response.options_integration_response
   ]
 }
 

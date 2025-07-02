@@ -41,7 +41,7 @@ document.getElementById('orderForm').addEventListener('submit', async function(e
     try {
         console.log("Sending API request with data:", JSON.stringify(orderData));
         // Send the data to the API gateway
-        const response = await fetch('https://1qs4zjuptg.execute-api.us-east-1.amazonaws.com/dev/ordersubmission', {
+        const response = await fetch(CONFIG.API_GATEWAY_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

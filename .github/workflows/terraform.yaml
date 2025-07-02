@@ -1,0 +1,120 @@
+name: Terraform Deployment
+on:
+  push:
+    branches:
+    - dev
+jobs:
+  terraform-backend-deploy:
+    runs-on: ubuntu-latest
+    outputs:
+      output1: ${{ steps.tf_output.outputs.api_gateway_url }}
+    steps:
+    - name: Print greeting hello
+      run: echo "Hello World!"
+    - name: Clone Github repository
+      uses: actions/checkout@v4
+      with:
+        ref: dev
+    - name: List files
+      run: |
+        ls -la
+        pwd
+    - name: Installing Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.11.3"
+    - name: Check Terraform Version
+      run: terraform --version
+    - name: Setup AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    - name: List files in Terraform backend dir
+      run: ls -la
+      working-directory: ./terraform-backend
+    - name: Terraform Init
+      run: terraform init
+      working-directory: ./terraform-backend
+    - name: Terraform Validate
+      run: terraform validate
+      working-directory: ./terraform-backend
+    - name: Terraform Plan
+      run: terraform plan
+      working-directory: ./terraform-backend
+    - name: Terraform Apply
+      run: terraform apply --auto-approve
+      working-directory: ./terraform-backend
+    - name: Get Terraform Output
+      id: tf_output
+      run: |
+        echo "api_gateway_url=$(terraform output -raw api_gateway_url)" >> "$GITHUB_OUTPUT"
+      working-directory: ./terraform-backend
+    - name: Terraform destroy
+      run: terraform destroy --auto-approve
+      working-directory: ./terraform-backend
+
+  terraform-frontend-deploy:
+    needs: terraform-backend-deploy
+    runs-on: ubuntu-latest
+
+    env:
+      S3_BUCKET: order-processing-system-config
+
+    steps:
+    - name: Show API Gateway URL
+      run: echo "API Gateway URL is ${{ needs.terraform-backend-deploy.outputs.output1 }}"
+    - name: Clone Github repository
+      uses: actions/checkout@v4
+      with:
+        ref: dev
+    - name: List files
+      run: |
+        ls -la
+        pwd
+    - name: Installing Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.11.3"
+    - name: Check Terraform Version
+      run: terraform --version
+    - name: Setup AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    - name: List files in Frontend dir
+      run: ls -la
+      working-directory: ./frontend
+    - name: Look at config.js file
+      run: cat config.js
+      working-directory: ./frontend
+    - name: Write URL to config.js
+      run: sed -i "s|\"dummy url\"|\"${{ needs.terraform-backend-deploy.outputs.output1 }}\"|" config.js
+      working-directory: ./frontend
+    - name: Look at config.js file
+      run: cat config.js
+      working-directory: ./frontend
+    - name: List S3 Bucket
+      run: aws s3 ls
+    - name: Copy config.js to S3 Bucket
+      run: |
+        aws s3 cp config.js s3://$S3_BUCKET/frontend/
+      working-directory: ./frontend
+    - name: Terraform Init
+      run: terraform init
+      working-directory: ./terraform-frontend
+    - name: Terraform Validate
+      run: terraform validate
+      working-directory: ./terraform-frontend
+    - name: Terraform Plan
+      run: terraform plan
+      working-directory: ./terraform-frontend
+    - name: Terraform Apply
+      run: terraform apply --auto-approve
+      working-directory: ./terraform-frontend
+    - name: Terraform Destroy
+      run: terraform destroy --auto-approve
+      working-directory: ./terraform-frontend
